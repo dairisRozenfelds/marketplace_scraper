@@ -4,7 +4,7 @@ from scrapy.http import HtmlResponse
 from scrapy.conf import settings
 from marketplace_scraper.items import AutopliusCarsItem
 
-class SsSpider(scrapy.Spider):
+class AutopliusSpider(scrapy.Spider):
     name = "autoplius"
     urls = [
         'https://en.autoplius.lt/ads/used-cars/bmw',
@@ -38,19 +38,21 @@ class SsSpider(scrapy.Spider):
             model = fullName[1]
             params = body.css('.announcement-parameters')
             group = response.request.url.split('/')[-1].split('?')[0]
-            item = AutopliusCarsItem()
-            item['group'] = group + '_autoplius'
-            item['name'] = name
-            item['model'] = model
-            item['year'] = self.concat_list(params.xpath('.//span[contains(@title, "Date of manufacture")]/text()').extract()).split('-')[0]
-            if len(title) >= 2:
-                item['engine'] = title[1].replace(' l.', '')
-            else:
-                item['engine'] = ''
-            item['mileage'] = self.concat_list(params.xpath('.//span[contains(@title, "Mileage")]/text()').extract()).replace(' ', '').replace('km', '')
-            item['price'] = self.concat_list(body.css('.announcement-pricing-info').xpath('.//strong/text()').extract()).replace(' ', '').replace('€', '')
-            item['url'] = self.concat_list(row.xpath('.//@href').extract())
-            yield item
+            price = self.concat_list(body.css('.announcement-pricing-info').xpath('.//strong/text()').extract()).replace(' ', '').replace('€', '')
+            if price.isnumeric():
+                item = AutopliusCarsItem()
+                item['group'] = group + '_autoplius'
+                item['name'] = name
+                item['model'] = model
+                item['year'] = self.concat_list(params.xpath('.//span[contains(@title, "Date of manufacture")]/text()').extract()).split('-')[0]
+                if len(title) >= 2:
+                    item['engine'] = title[1].replace(' l.', '')
+                else:
+                    item['engine'] = ''
+                item['mileage'] = self.concat_list(params.xpath('.//span[contains(@title, "Mileage")]/text()').extract()).replace(' ', '').replace('km', '')
+                item['price'] = price
+                item['url'] = self.concat_list(row.xpath('.//@href').extract())
+                yield item
             
         #Go to next page
         if (self.concat_list(response.css('.paging-bot .pagination li.next a.next').xpath('.//@href').extract())):            

@@ -31,26 +31,28 @@ class SsSpider(scrapy.Spider):
     def entryParse(self, response):
         mainContent = response.css('#content_main_div #msg_div_msg')
 
-        item = SsCarsItemDeep()
-        group = response.request.url.split('/')[-3]
-        item['group'] = group
-        name = self.concat_list(mainContent.css('#tdo_31').xpath('.//b/text()').extract()).split()
-        if (len(name) >= 2):
-            item['name'] = name[0]
-            item['model'] = name[1]
-        else:
-            item['name'] = name
-            item['model'] = name
-        item['year'] = self.concat_list(mainContent.css('#tdo_18').xpath('.//text()').extract())
-        item['engine'] = self.concat_list(mainContent.css('#tdo_15').xpath('.//text()').extract())
-        item['gearbox'] = self.concat_list(mainContent.css('#tdo_35').xpath('.//text()').extract())
-        item['mileage'] = self.concat_list(mainContent.css('#tdo_16').xpath('.//text()').extract()).replace(' ', '')
-        item['color'] = self.concat_list(mainContent.css('#tdo_17').xpath('.//text()').extract())
-        item['TA'] = self.concat_list(mainContent.css('#tdo_223').xpath('.//text()').extract())
-        item['price'] = self.concat_list(mainContent.css('#tdo_8').xpath('.//text()').extract()).replace('€', '').replace(' ', '')
-        item['date_added'] = datetime.strptime(self.concat_list(response.css('#page_main .msg_footer')[3].xpath('.//text()').extract()).replace('Datums:', '').lstrip(), '%d.%m.%Y %H:%M')
-        item['url'] = response.request.url
-        yield item
+        price = self.concat_list(mainContent.css('#tdo_8').xpath('.//text()').extract()).replace('€', '').replace(' ', '')
+        if price.isnumeric():
+            item = SsCarsItemDeep()
+            group = response.request.url.split('/')[-3]
+            item['group'] = group
+            name = self.concat_list(mainContent.css('#tdo_31').xpath('.//b/text()').extract()).split()
+            if (len(name) >= 2):
+                item['name'] = name[0]
+                item['model'] = name[1]
+            else:
+                item['name'] = name
+                item['model'] = name
+            item['year'] = self.concat_list(mainContent.css('#tdo_18').xpath('.//text()').extract())
+            item['engine'] = self.concat_list(mainContent.css('#tdo_15').xpath('.//text()').extract())
+            item['gearbox'] = self.concat_list(mainContent.css('#tdo_35').xpath('.//text()').extract())
+            item['mileage'] = self.concat_list(mainContent.css('#tdo_16').xpath('.//text()').extract()).replace(' ', '')
+            item['color'] = self.concat_list(mainContent.css('#tdo_17').xpath('.//text()').extract())
+            item['TA'] = self.concat_list(mainContent.css('#tdo_223').xpath('.//text()').extract())
+            item['price'] = price
+            item['date_added'] = datetime.strptime(self.concat_list(response.css('#page_main .msg_footer')[3].xpath('.//text()').extract()).replace('Datums:', '').lstrip(), '%d.%m.%Y %H:%M')
+            item['url'] = response.request.url
+            yield item
 
     def parse(self, response):
         pageTables = response.css('form#filter_frm table')

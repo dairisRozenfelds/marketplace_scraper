@@ -7,7 +7,6 @@
 
 import scrapy
 
-
 class SsCarsItemDeep(scrapy.Item):
     group = scrapy.Field()
     name = scrapy.Field()
